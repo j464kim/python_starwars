@@ -2,6 +2,7 @@
 
 import os
 import random
+from playsound import playsound
 
 # turtle module: https://docs.python.org/2/library/turtle.html
 import turtle
@@ -14,7 +15,9 @@ turtle.speed(0)
 turtle.bgcolor("black")
 # hide the default turtle
 turtle.ht()
+# This saves memory
 turtle.setundobuffer(1)
+# This sppeds up drawing
 turtle.tracer(1)
 screen = turtle.Screen()
 
@@ -95,6 +98,31 @@ class Enemy(Ufo):
         self.setheading(random.randint(0, 360))
 
 
+# Ally inherits Ufo
+class Ally(Ufo):
+    def __init__(self, player_shape, color, init_x, init_y):
+        Ufo.__init__(self, player_shape, color, init_x, init_y)
+        self.speed = 8
+        self.setheading(random.randint(0, 360))
+
+    def check_boundary(self):
+        if self.xcor() > 290:
+            self.setx(290)
+            self.lt(60)
+
+        if self.xcor() < -290:
+            self.setx(-290)
+            self.lt(60)
+
+        if self.ycor() > 290:
+            self.sety(290)
+            self.lt(60)
+
+        if self.ycor() < -290:
+            self.sety(-290)
+            self.lt(60)
+
+
 # Missile inherits Ufo
 class Missile(Ufo):
     def __init__(self, player_shape, color, init_x, init_y):
@@ -112,6 +140,8 @@ class Missile(Ufo):
 
     def fired(self):
         if self.status == 'standby':
+            # play the missile sound on fire in background
+            playsound('laser.mp3', False)
             self.goto(player.xcor(), player.ycor())
             self.status = 'fired'
             self.setheading(player.heading())
@@ -149,15 +179,24 @@ class Game():
             self.pen.rt(90)
         self.pen.penup()
         self.pen.ht()
+        self.pen.pendown()
+
+    def show_status(self):
+        self.pen.undo()
+        msg = "Score: %s" % self.score
+        self.pen.goto(-300, 310)
+        self.pen.write(msg, font=('Arial', 16, 'normal'))
 
 
 # Create game object
 game = Game()
 game.draw_border()
+game.show_status()
 
 # Create Ufo object which is the player
 player = Player('triangle', 'white', 0, 0)
 enemy = Enemy('circle', 'red', -100, 0)
+ally = Ally('square', 'blue', 100, 0)
 missile = Missile('triangle', 'yellow', 0, 0)
 
 # Keyboard bindings
@@ -172,10 +211,18 @@ screen.listen()
 while True:
     player.move()
     enemy.move()
+    ally.move()
     missile.move()
 
-    # Check for collision with the enemy
+    # Check for collision
     if player.is_collision(enemy) or missile.is_collision(enemy):
         enemy.re_generate()
+        game.score += 100
+        game.show_status()
+
+    if player.is_collision(ally) or missile.is_collision(ally):
+        ally.re_generate()
+        game.score -= 50
+        game.show_status()
 
 delay = raw_input("Enter to finish")
