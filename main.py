@@ -31,8 +31,9 @@ class Ufo(turtle.Turtle):
 
     def move(self):
         self.fd(self.speed)
+        self.check_boundary()
 
-        # Detect Boundary
+    def check_boundary(self):
         if self.xcor() > 290:
             self.setx(290)
             self.rt(60)
@@ -56,28 +57,10 @@ class Ufo(turtle.Turtle):
         else:
             return False
 
-
-class Game():
-    def __init__(self):
-        self.level = 1
-        self.score = 0
-        self.state = "playing"
-        self.lives = 3
-        # define pen
-        self.pen = turtle.Turtle()
-        self.pen.speed(0)
-        self.pen.color('white')
-        self.pen.pensize(3)
-        self.pen.penup()
-
-    def draw_border(self):
-        self.pen.goto(-300, 300)
-        self.pen.pendown()
-        for side in range(4):
-            self.pen.fd(600)
-            self.pen.rt(90)
-        self.pen.penup()
-        self.pen.ht()
+    def re_generate(self):
+        x = random.randint(-250, 250)
+        y = random.randint(-250, 250)
+        self.goto(x, y)
 
 
 # Player inherits Ufo
@@ -104,12 +87,68 @@ class Player(Ufo):
         print('slower')
 
 
-# Player inherits Ufo
+# Enemy inherits Ufo
 class Enemy(Ufo):
     def __init__(self, player_shape, color, init_x, init_y):
         Ufo.__init__(self, player_shape, color, init_x, init_y)
         self.speed = 6
         self.setheading(random.randint(0, 360))
+
+
+# Missile inherits Ufo
+class Missile(Ufo):
+    def __init__(self, player_shape, color, init_x, init_y):
+        Ufo.__init__(self, player_shape, color, init_x, init_y)
+        self.shapesize(stretch_wid=0.3, stretch_len=0.4, outline=None)
+        self.speed = 20
+        self.status = 'standby'
+
+    def move(self):
+        if self.status == 'fired':
+            self.fd(self.speed)
+            self.check_boundary()
+        elif self.status == 'standby':
+            self.ht()
+
+    def fired(self):
+        if self.status == 'standby':
+            self.goto(player.xcor(), player.ycor())
+            self.status = 'fired'
+            self.setheading(player.heading())
+            self.st()
+
+    def check_boundary(self):
+        if self.xcor() > 290 or self.xcor() < -290 or self.ycor() > 290 or self.ycor() < -290:
+            self.status = 'standby'
+            self.ht()
+
+    def is_collision(self, other):
+        if Ufo.is_collision(self, other):
+            self.status = 'standby'
+            return True
+
+
+class Game():
+    def __init__(self):
+        self.level = 1
+        self.score = 0
+        self.state = "playing"
+        self.lives = 3
+        # define pen
+        self.pen = turtle.Turtle()
+        self.pen.speed(0)
+        self.pen.color('white')
+        self.pen.pensize(3)
+        self.pen.penup()
+
+    def draw_border(self):
+        self.pen.goto(-300, 300)
+        self.pen.pendown()
+        for side in range(4):
+            self.pen.fd(600)
+            self.pen.rt(90)
+        self.pen.penup()
+        self.pen.ht()
 
 
 # Create game object
@@ -119,24 +158,24 @@ game.draw_border()
 # Create Ufo object which is the player
 player = Player('triangle', 'white', 0, 0)
 enemy = Enemy('circle', 'red', -100, 0)
+missile = Missile('triangle', 'yellow', 0, 0)
 
 # Keyboard bindings
 screen.onkey(player.turn_left, "Left")
 screen.onkey(player.turn_right, "Right")
 screen.onkey(player.accelerate, "Up")
 screen.onkey(player.decelerate, "Down")
+screen.onkey(missile.fired, "space")
 screen.listen()
 
 # Main Game Loop
 while True:
     player.move()
     enemy.move()
+    missile.move()
 
-    # Check for collision
-    if player.is_collision(enemy):
-        # Move the if player collides with it
-        x = random.randint(-250, 250)
-        y = random.randint(-250, 250)
-        enemy.goto(x, y)
+    # Check for collision with the enemy
+    if player.is_collision(enemy) or missile.is_collision(enemy):
+        enemy.re_generate()
 
 delay = raw_input("Enter to finish")
