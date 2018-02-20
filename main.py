@@ -2,6 +2,7 @@
 
 import os
 import random
+import time
 from playsound import playsound
 
 # turtle module: https://docs.python.org/2/library/turtle.html
@@ -17,8 +18,8 @@ turtle.bgcolor("black")
 turtle.ht()
 # This saves memory
 turtle.setundobuffer(1)
-# This sppeds up drawing
-turtle.tracer(1)
+# This speeds up drawing
+turtle.tracer(0)
 screen = turtle.Screen()
 
 
@@ -195,9 +196,13 @@ game.show_status()
 
 # Create Ufo object which is the player
 player = Player('triangle', 'white', 0, 0)
-enemy = Enemy('circle', 'red', -100, 0)
-ally = Ally('square', 'blue', 100, 0)
 missile = Missile('triangle', 'yellow', 0, 0)
+
+enemies = []
+allies = []
+for i in range(6):
+    enemies.append(Enemy('circle', 'red', -100, 0))
+    allies.append(Ally('square', 'blue', 100, 0))
 
 # Keyboard bindings
 screen.onkey(player.turn_left, "Left")
@@ -209,20 +214,25 @@ screen.listen()
 
 # Main Game Loop
 while True:
+    screen.update()
+    time.sleep(0.02)
     player.move()
-    enemy.move()
-    ally.move()
     missile.move()
 
-    # Check for collision
-    if player.is_collision(enemy) or missile.is_collision(enemy):
-        enemy.re_generate()
-        game.score += 100
-        game.show_status()
+    for enemy in enemies:
+        enemy.move()
+        # Check for collision
+        if player.is_collision(enemy) or missile.is_collision(enemy):
+            enemy.re_generate()
+            game.score += 100
+            game.show_status()
 
-    if player.is_collision(ally) or missile.is_collision(ally):
-        ally.re_generate()
-        game.score -= 50
-        game.show_status()
+    for ally in allies:
+        ally.move()
+        # Check for collision
+        if player.is_collision(ally) or missile.is_collision(ally):
+            ally.re_generate()
+            game.score -= 50
+            game.show_status()
 
 delay = raw_input("Enter to finish")
