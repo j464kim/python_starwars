@@ -162,6 +162,31 @@ class Missile(Ufo):
             return True
 
 
+class Debris(Ufo):
+    def __init__(self, player_shape, color, init_x, init_y):
+        Ufo.__init__(self, player_shape, color, init_x, init_y)
+        self.shapesize(stretch_wid=0.1, stretch_len=0.1, outline=None)
+        self.speed = 10
+        self.frame = 1
+        self.has_exploded = True
+
+    def explode(self, ufo):
+        if self.has_exploded:
+            self.goto(ufo.xcor(), ufo.ycor())
+            self.setheading(random.randint(0, 360))
+            self.st()
+        else:
+            self.ht()
+
+    def move(self):
+        if self.frame < 15:
+            self.fd(self.speed)
+            self.frame += 1
+        else:
+            self.frame = 0
+            self.ht()
+
+
 class Game():
     def __init__(self):
         self.level = 1
@@ -203,9 +228,13 @@ missile = Missile('triangle', 'yellow', 0, 0)
 
 enemies = []
 allies = []
+debris = []
 for i in range(6):
     enemies.append(Enemy('circle', 'red', -100, 0))
     allies.append(Ally('square', 'blue', 100, 0))
+
+for i in range(20):
+    debris.append(Debris('circle', 'orange', 0, 0))
 
 # Keyboard bindings
 screen.onkey(player.turn_left, "Left")
@@ -226,6 +255,8 @@ while True:
         enemy.move()
         # Check for collision
         if player.is_collision(enemy) or missile.is_collision(enemy):
+            for deb in debris:
+                deb.explode(enemy)
             enemy.re_generate()
             game.score += 100
             game.show_status()
@@ -237,5 +268,8 @@ while True:
             ally.re_generate()
             game.score -= 50
             game.show_status()
+
+    for deb in debris:
+        deb.move()
 
 delay = raw_input("Enter to finish")
