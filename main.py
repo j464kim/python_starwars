@@ -14,6 +14,8 @@ turtle.fd(0)
 # set the animation speed to max
 turtle.speed(0)
 turtle.bgcolor("black")
+turtle.bgpic("starfield.gif")
+turtle.title("StarWars")
 # hide the default turtle
 turtle.ht()
 # This saves memory
@@ -71,6 +73,7 @@ class Ufo(turtle.Turtle):
 class Player(Ufo):
     def __init__(self, player_shape, color, init_x, init_y):
         Ufo.__init__(self, player_shape, color, init_x, init_y)
+        self.shapesize(stretch_wid=0.6, stretch_len=1.1, outline=None)
         self.speed = 2
         self.lives = 3
 
@@ -128,7 +131,7 @@ class Ally(Ufo):
 class Missile(Ufo):
     def __init__(self, player_shape, color, init_x, init_y):
         Ufo.__init__(self, player_shape, color, init_x, init_y)
-        self.shapesize(stretch_wid=0.3, stretch_len=0.4, outline=None)
+        self.shapesize(stretch_wid=0.2, stretch_len=0.4, outline=None)
         self.speed = 20
         self.status = 'standby'
 
@@ -142,7 +145,7 @@ class Missile(Ufo):
     def fired(self):
         if self.status == 'standby':
             # play the missile sound on fire in background
-            playsound('laser.mp3', False)
+            # playsound('laser.mp3', False)
             self.goto(player.xcor(), player.ycor())
             self.status = 'fired'
             self.setheading(player.heading())
