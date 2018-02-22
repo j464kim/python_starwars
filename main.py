@@ -68,6 +68,9 @@ class Ufo(turtle.Turtle):
         y = random.randint(-250, 250)
         self.goto(x, y)
 
+    def remove(self):
+        self.goto(1000, 1000)
+
 
 # Player inherits Ufo
 class Player(Ufo):
@@ -133,14 +136,14 @@ class Missile(Ufo):
         Ufo.__init__(self, player_shape, color, init_x, init_y)
         self.shapesize(stretch_wid=0.2, stretch_len=0.4, outline=None)
         self.speed = 20
-        self.status = 'standby'
+        self.status = 'fired'
 
     def move(self):
         if self.status == 'fired':
             self.fd(self.speed)
             self.check_boundary()
         elif self.status == 'standby':
-            self.ht()
+            self.remove()
 
     def fired(self):
         if self.status == 'standby':
@@ -149,12 +152,11 @@ class Missile(Ufo):
             self.goto(player.xcor(), player.ycor())
             self.status = 'fired'
             self.setheading(player.heading())
-            self.st()
 
     def check_boundary(self):
         if self.xcor() > 290 or self.xcor() < -290 or self.ycor() > 290 or self.ycor() < -290:
             self.status = 'standby'
-            self.ht()
+            self.remove()
 
     def is_collision(self, other):
         if Ufo.is_collision(self, other):
@@ -166,25 +168,31 @@ class Debris(Ufo):
     def __init__(self, player_shape, color, init_x, init_y):
         Ufo.__init__(self, player_shape, color, init_x, init_y)
         self.shapesize(stretch_wid=0.1, stretch_len=0.1, outline=None)
-        self.speed = 10
-        self.frame = 1
-        self.has_exploded = True
+        self.frame = 0
+        self.ht()
 
     def explode(self, ufo):
-        if self.has_exploded:
-            self.goto(ufo.xcor(), ufo.ycor())
-            self.setheading(random.randint(0, 360))
-            self.st()
-        else:
-            self.ht()
+        self.goto(ufo.xcor(), ufo.ycor())
+        self.setheading(random.randint(0, 360))
+        self.frame = 1
+        self.st()
 
     def move(self):
-        if self.frame < 15:
-            self.fd(self.speed)
+        if self.frame:
+            # for the better effect of debris falling apart
+            self.fd((20 - self.frame) / 2)
             self.frame += 1
-        else:
-            self.frame = 0
-            self.ht()
+
+            if self.frame < 6:
+                self.shapesize(stretch_wid=0.2, stretch_len=0.2, outline=None)
+            elif self.frame < 11:
+                self.shapesize(stretch_wid=0.1, stretch_len=0.1, outline=None)
+            else:
+                self.shapesize(stretch_wid=0.05, stretch_len=0.05, outline=None)
+
+            if self.frame > 18:
+                self.frame = 0
+                self.ht()
 
 
 class Game():
@@ -216,6 +224,10 @@ class Game():
         self.pen.goto(-300, 310)
         self.pen.write(msg, font=('Arial', 16, 'normal'))
 
+    def update_score(self, score):
+        self.score += score
+        self.show_status()
+
 
 # Create game object
 game = Game()
@@ -224,7 +236,7 @@ game.show_status()
 
 # Create Ufo object which is the player
 player = Player('triangle', 'white', 0, 0)
-missile = Missile('triangle', 'yellow', 0, 0)
+missile = Missile('triangle', 'yellow', 1000, 1000)
 
 enemies = []
 allies = []
@@ -258,16 +270,14 @@ while True:
             for deb in debris:
                 deb.explode(enemy)
             enemy.re_generate()
-            game.score += 100
-            game.show_status()
+            game.update_score(100)
 
     for ally in allies:
         ally.move()
         # Check for collision
         if player.is_collision(ally) or missile.is_collision(ally):
             ally.re_generate()
-            game.score -= 50
-            game.show_status()
+            game.update_score(-50)
 
     for deb in debris:
         deb.move()
