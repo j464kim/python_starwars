@@ -169,13 +169,11 @@ class Debris(Ufo):
         Ufo.__init__(self, player_shape, color, init_x, init_y)
         self.shapesize(stretch_wid=0.1, stretch_len=0.1, outline=None)
         self.frame = 0
-        self.ht()
 
     def explode(self, ufo):
         self.goto(ufo.xcor(), ufo.ycor())
         self.setheading(random.randint(0, 360))
         self.frame = 1
-        self.st()
 
     def move(self):
         if self.frame:
@@ -192,7 +190,12 @@ class Debris(Ufo):
 
             if self.frame > 18:
                 self.frame = 0
-                self.ht()
+                self.remove()
+
+        # Border Check
+        if self.xcor() > 290 or self.xcor() < -290 or self.ycor() > 290 or self.ycor() < -290:
+            self.frame = 0
+            self.remove()
 
 
 class Game():
@@ -241,7 +244,7 @@ missile = Missile('triangle', 'yellow', 1000, 1000)
 enemies = []
 allies = []
 debris = []
-for i in range(6):
+for i in range(3):
     enemies.append(Enemy('circle', 'red', -100, 0))
     allies.append(Ally('square', 'blue', 100, 0))
 
