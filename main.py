@@ -24,6 +24,10 @@ turtle.setundobuffer(1)
 turtle.tracer(0)
 screen = turtle.Screen()
 
+# Register shapes
+turtle.register_shape("enemy.gif")
+turtle.register_shape("ally.gif")
+
 
 class Ufo(turtle.Turtle):
     def __init__(self, ufo_shape, color, init_x, init_y):
@@ -245,8 +249,8 @@ enemies = []
 allies = []
 debris = []
 for i in range(3):
-    enemies.append(Enemy('circle', 'red', -100, 0))
-    allies.append(Ally('square', 'blue', 100, 0))
+    enemies.append(Enemy("enemy.gif", 'red', -100, 0))
+    allies.append(Ally("ally.gif", 'blue', 100, 0))
 
 for i in range(20):
     debris.append(Debris('circle', 'orange', 0, 0))
